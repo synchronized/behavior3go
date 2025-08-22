@@ -33,6 +33,14 @@ func (this *Decorator) Initialize(params *BTNodeCfg) {
 	//this.BaseNode.IBaseWorker = this
 }
 
+func (this *Decorator) SetDepth(depth int) {
+	this.BaseNode.SetDepth(depth)
+	if this.child != nil {
+		var child = this.GetChild()
+		child.SetDepth(depth + 1)
+	}
+}
+
 //GetChild
 func (this *Decorator) GetChild() IBaseNode {
 	return this.child

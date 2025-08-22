@@ -12,7 +12,7 @@ import (
 	. "github.com/magicsea/behavior3go/decorators"
 )
 
-func createBaseStructMaps() *b3.RegisterStructMaps {
+func CreateBaseStructMaps() *b3.RegisterStructMaps {
 	st := b3.NewRegisterStructMaps()
 	//actions
 	st.Register("Error", &Error{})
@@ -37,9 +37,16 @@ func createBaseStructMaps() *b3.RegisterStructMaps {
 	return st
 }
 
-func CreateBevTreeFromConfig(config *BTTreeCfg, extMap *b3.RegisterStructMaps) *BehaviorTree {
-	baseMaps := createBaseStructMaps()
-	tree := NewBeTree()
-	tree.Load(config, baseMaps, extMap)
-	return tree
+func CreateBevTreeFromConfig(extMaps *b3.RegisterStructMaps, configs ...*BTTreeCfg) *BehaviorTree {
+	var treeConfigMap = make(map[string]*BTTreeCfg)
+	for _, v := range configs {
+		treeConfigMap[v.ID] = v
+	}
+	var firstConfigId = configs[0].ID
+	var baseMaps = CreateBaseStructMaps()
+	var context = NewContext(baseMaps, extMaps, func(id string) *BTTreeCfg {
+		return treeConfigMap[id]
+	})
+
+	return CreateBehaviorTree(context, firstConfigId)
 }

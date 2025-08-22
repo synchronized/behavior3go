@@ -22,10 +22,13 @@ type IBaseNode interface {
 	Initialize(params *BTNodeCfg)
 	GetCategory() string
 	Execute(tick *Tick) b3.Status
+	GetID() string
 	GetName() string
 	GetTitle() string
 	SetBaseNodeWorker(worker IBaseWorker)
 	GetBaseNodeWorker() IBaseWorker
+	GetDepth() int
+	SetDepth(depth int)
 }
 
 /**
@@ -117,6 +120,9 @@ type BaseNode struct {
 	 * @readonly
 	**/
 	properties map[string]interface{}
+
+	depth  int       //深度
+	parent IBaseNode //父节点
 }
 
 func (this *BaseNode) Ctor() {
@@ -156,6 +162,8 @@ func (this *BaseNode) Initialize(params *BTNodeCfg) {
 	this.description = params.Description // || node.description;
 	this.properties = params.Properties   //|| node.properties;
 
+	this.depth = 1
+	this.parent = nil
 }
 
 func (this *BaseNode) GetCategory() string {
@@ -173,6 +181,12 @@ func (this *BaseNode) GetTitle() string {
 	//fmt.Println("GetTitle ", this.title)
 	return this.title
 }
+func (this *BaseNode) GetDepth() int {
+	return this.depth
+}
+func (this *BaseNode) SetDepth(depth int) {
+	this.depth = depth
+}
 
 /**
  * This is the main method to propagate the tick signal to this node. This
@@ -188,6 +202,22 @@ func (this *BaseNode) GetTitle() string {
 **/
 func (this *BaseNode) _execute(tick *Tick) b3.Status {
 	//fmt.Println("_execute :", this.title)
+
+	//如果上一次,节点与本节点不一样先关闭
+	var lastOpenNodes = tick.Blackboard._getTreeData(this.id).OpenNodes
+	if len(lastOpenNodes) >= this.GetDepth() {
+		var depthIndex = this.GetDepth() - 1
+		var lastSameDepthNode = lastOpenNodes[depthIndex]
+		if lastSameDepthNode != this {
+			for i := len(lastOpenNodes) - 1; i >= depthIndex; i-- {
+				var nodeItem = lastOpenNodes[i]
+				if tick.Blackboard.GetBool("isOpen", tick.GetTree().GetID(), nodeItem.GetID()) {
+					nodeItem._close(tick)
+				}
+			}
+		}
+	}
+
 	// ENTER
 	this._enter(tick)
 

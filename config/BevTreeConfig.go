@@ -72,7 +72,7 @@ func (this *BTNodeCfg) GetPropertyAsString(name string) string {
 
 	str, fok := v.(string)
 	if !fok {
-		return fmt.Sprintf("%v",v)
+		return fmt.Sprintf("%v", v)
 	}
 	return str
 }
@@ -84,7 +84,7 @@ type BTTreeCfg struct {
 	Description string                 `json:"description"`
 	Root        string                 `json:"root"`
 	Properties  map[string]interface{} `json:"properties"`
-	Nodes       map[string]BTNodeCfg   `json:"nodes"`
+	Nodes       map[string]*BTNodeCfg  `json:"nodes"`
 }
 
 //加载

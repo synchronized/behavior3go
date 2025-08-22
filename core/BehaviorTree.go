@@ -152,95 +152,6 @@ func (this *BehaviorTree) GetRoot() IBaseNode {
 }
 
 /**
- * This method loads a Behavior Tree from a data structure, populating this
- * object with the provided data. Notice that, the data structure must
- * follow the format specified by Behavior3JS. Consult the guide to know
- * more about this format.
- *
- * You probably want to use custom nodes in your BTs, thus, you need to
- * provide the `names` object, in which this method can find the nodes by
- * `names[NODE_NAME]`. This variable can be a namespace or a dictionary,
- * as long as this method can find the node by its name, for example:
- *
- *     //json
- *     ...
- *     'node1': {
- *       'name': MyCustomNode,
- *       'title': ...
- *     }
- *     ...
- *
- *     //code
- *     var bt = new b3.BehaviorTree();
- *     bt.load(data, {'MyCustomNode':MyCustomNode})
- *
- *
- * @method load
- * @param {Object} data The data structure representing a Behavior Tree.
- * @param {Object} [names] A namespace or dict containing custom nodes.
-**/
-func (this *BehaviorTree) Load(data *config.BTTreeCfg, maps *b3.RegisterStructMaps, extMaps *b3.RegisterStructMaps) {
-	this.title = data.Title             //|| this.title;
-	this.description = data.Description // || this.description;
-	this.properties = data.Properties   // || this.properties;
-	this.dumpInfo = data
-	nodes := make(map[string]IBaseNode)
-
-	// Create the node list (without connection between them)
-
-	for id, s := range data.Nodes {
-		spec := &s
-		var node IBaseNode
-
-		if spec.Category == "tree" {
-			node = new(SubTree)
-		} else {
-			if extMaps != nil && extMaps.CheckElem(spec.Name) {
-				// Look for the name in custom nodes
-				if tnode, err := extMaps.New(spec.Name); err == nil {
-					node = tnode.(IBaseNode)
-				}
-			} else {
-				if tnode, err2 := maps.New(spec.Name); err2 == nil {
-					node = tnode.(IBaseNode)
-				} else {
-					//fmt.Println("new ", spec.Name, " err:", err2)
-				}
-			}
-		}
-
-		if node == nil {
-			// Invalid node name
-			panic("BehaviorTree.load: Invalid node name:" + spec.Name + ",title:" + spec.Title)
-
-		}
-
-		node.Ctor()
-		node.Initialize(spec)
-		node.SetBaseNodeWorker(node.(IBaseWorker))
-		nodes[id] = node
-	}
-
-	// Connect the nodes
-	for id, spec := range data.Nodes {
-		node := nodes[id]
-
-		if node.GetCategory() == b3.COMPOSITE && spec.Children != nil {
-			for i := 0; i < len(spec.Children); i++ {
-				var cid = spec.Children[i]
-				comp := node.(IComposite)
-				comp.AddChild(nodes[cid])
-			}
-		} else if node.GetCategory() == b3.DECORATOR && len(spec.Child) > 0 {
-			dec := node.(IDecorator)
-			dec.SetChild(nodes[spec.Child])
-		}
-	}
-
-	this.root = nodes[data.Root]
-}
-
-/**
  * This method dump the current BT into a data structure.
  *
  * Note: This method does not record the current node parameters. Thus,
@@ -335,23 +246,28 @@ func printNode(root IBaseNode, blk int) {
 	}
 
 	//fmt.Println("|—<", root.Name, ">") //打印"|—<id>"形式
-	fmt.Print("|—", root.GetTitle())
+	fmt.Println(fmt.Sprintf("|—(%v)[%v]%v", root.GetDepth(), root.GetCategory(), root.GetTitle()))
 
-	if root.GetCategory() == b3.DECORATOR {
+	switch root.GetCategory() {
+
+	case b3.COMPOSITE:
+		comp := root.(IComposite)
+		for i := 0; i < comp.GetChildCount(); i++ {
+			printNode(comp.GetChild(i), blk+3)
+		}
+
+	case b3.DECORATOR:
 		dec := root.(IDecorator)
 		if dec.GetChild() != nil {
 			//fmt.Print("=>")
 			printNode(dec.GetChild(), blk+3)
 		}
-	}
 
-	fmt.Println("")
-	if root.GetCategory() == b3.COMPOSITE {
-		comp := root.(IComposite)
-		if comp.GetChildCount() > 0 {
-			for i := 0; i < comp.GetChildCount(); i++ {
-				printNode(comp.GetChild(i), blk+3)
-			}
+	case b3.TREE:
+		subt := root.(ISubTree)
+		if subt.GetChild() != nil {
+			//fmt.Print("=>")
+			printNode(subt.GetChild(), blk+3)
 		}
 	}
 

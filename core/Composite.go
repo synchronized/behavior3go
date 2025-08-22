@@ -39,6 +39,14 @@ func (this *Composite) Initialize(params *BTNodeCfg) {
 	//fmt.Println("Composite Initialize")
 }
 
+func (this *Composite) SetDepth(depth int) {
+	this.BaseNode.SetDepth(depth)
+	for i := 0; i < this.GetChildCount(); i++ {
+		var child = this.GetChild(i)
+		child.SetDepth(depth + 1)
+	}
+}
+
 /**
  *
  * @method GetChildCount

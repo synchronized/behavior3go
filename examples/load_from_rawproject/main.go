@@ -6,14 +6,14 @@ package main
 import (
 	"fmt"
 	b3 "github.com/magicsea/behavior3go"
-	. "github.com/magicsea/behavior3go/config"
+	"github.com/magicsea/behavior3go/config"
 	. "github.com/magicsea/behavior3go/core"
 	. "github.com/magicsea/behavior3go/examples/share"
 	. "github.com/magicsea/behavior3go/loader"
 )
 
 func main() {
-	projectConfig, ok := LoadRawProjectCfg("example.b3")
+	projectConfig, ok := config.LoadRawProjectCfg("example.b3")
 	if !ok {
 		fmt.Println("LoadRawProjectCfg err")
 		return
@@ -23,15 +23,8 @@ func main() {
 	maps := b3.NewRegisterStructMaps()
 	maps.Register("Log", new(LogTest))
 
-	var firstTree *BehaviorTree
-	//载入
-	for _, v := range projectConfig.Data.Trees {
-		tree := CreateBevTreeFromConfig(&v, maps)
-		tree.Print()
-		if firstTree == nil {
-			firstTree = tree
-		}
-	}
+	var firstTree = CreateBevTreeFromConfig(maps, projectConfig.Data.Trees...)
+	firstTree.Print()
 
 	//输入板
 	board := NewBlackboard()

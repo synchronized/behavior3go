@@ -9,6 +9,7 @@ const (
 	DECORATOR = "decorator"
 	ACTION    = "action"
 	CONDITION = "condition"
+	TREE      = "tree"
 )
 
 // Returning status

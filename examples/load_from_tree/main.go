@@ -6,14 +6,14 @@ package main
 import (
 	"fmt"
 	b3 "github.com/magicsea/behavior3go"
-	. "github.com/magicsea/behavior3go/config"
+	"github.com/magicsea/behavior3go/config"
 	. "github.com/magicsea/behavior3go/core"
 	. "github.com/magicsea/behavior3go/examples/share"
 	. "github.com/magicsea/behavior3go/loader"
 )
 
 func main() {
-	treeConfig, ok := LoadTreeCfg("tree.json")
+	treeConfig, ok := config.LoadTreeCfg("tree.json")
 	if !ok {
 		fmt.Println("LoadTreeCfg err")
 		return
@@ -23,14 +23,14 @@ func main() {
 	maps.Register("Log", new(LogTest))
 
 	//载入
-	tree := CreateBevTreeFromConfig(treeConfig, maps)
-	tree.Print()
+	var firstTree = CreateBevTreeFromConfig(maps, treeConfig)
+	firstTree.Print()
 
 	//输入板
 	board := NewBlackboard()
 	//循环每一帧
 	for i := 0; i < 5; i++ {
-		tree.Tick(i, board)
+		firstTree.Tick(i, board)
 	}
 
 }

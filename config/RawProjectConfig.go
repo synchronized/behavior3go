@@ -8,9 +8,9 @@ import (
 
 //原生工程json类型
 type RawProjectCfg struct {
-	Name string       `json:"name"`
-	Data BTProjectCfg `json:"data"`
-	Path string       `json:"path"`
+	Name string        `json:"name"`
+	Data *BTProjectCfg `json:"data"`
+	Path string        `json:"path"`
 }
 
 //加载原生工程
